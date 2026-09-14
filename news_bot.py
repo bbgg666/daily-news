@@ -21,7 +21,8 @@ def get_global_news():
             for entry in feed.entries[:8]:
                 summary = entry.summary if hasattr(entry, 'summary') else entry.title
                 all_news.append(f"标题：{entry.title}\n摘要：{summary}\n链接：{entry.link}")
-        except:
+        except Exception as e:
+            print(f"抓取源失败 {url}: {e}")
             continue
     return "\n\n".join(all_news)
 
@@ -49,7 +50,12 @@ def summarize_news(raw_news):
         "stream": False
     }
     resp = requests.post("https://api.deepseek.com/v1/chat/completions", headers=headers, json=data)
-    return resp.json()["choices"][0]["message"]["content"]
+    print(f"API状态码: {resp.status_code}")
+    print(f"API返回内容: {resp.text}")
+    resp_json = resp.json()
+    if "choices" not in resp_json:
+        raise Exception(f"API调用失败: {resp_json}")
+    return resp_json["choices"][0]["message"]["content"]
 
 def push_telegram(content):
     api_url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
@@ -59,10 +65,17 @@ def push_telegram(content):
         "parse_mode": "Markdown",
         "disable_web_page_preview": True
     }
-    requests.post(api_url, json=payload)
+    resp = requests.post(api_url, json=payload)
+    print(f"TG推送状态码: {resp.status_code}")
+    print(f"TG返回内容: {resp.text}")
+    resp.raise_for_status()
 
 if __name__ == "__main__":
+    print("开始抓取新闻...")
     raw_news = get_global_news()
+    print(f"抓取到新闻素材长度: {len(raw_news)}")
+    print("开始AI总结...")
     result = summarize_news(raw_news)
+    print("总结完成，开始推送...")
     push_telegram(result)
     print("全球早报推送完成")
