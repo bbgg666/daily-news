@@ -9,7 +9,7 @@ TG_CHAT_ID = os.environ.get("TG_CHAT_ID")
 RSS_SOURCES = [
     "https://www.reuters.com/rssFeed/worldNews",
     "http://feeds.bbci.co.uk/news/world/rss.xml",
-    "https://apnews.com/rss/apf-topnews/world-news",
+    "https://apnews.com/rss/apf-topnews",
     "http://www.xinhuanet.com/world/news_world.xml"
 ]
 
@@ -37,8 +37,9 @@ def summarize_news(raw_news):
 2. 每条新闻固定格式：
 <b>序号. 新闻核心标题</b>
 一句话核心事实内容
+<small>来源：<a href="原文链接">查看原文</a></small>
 3. 序号从1开始连续编号，每条新闻之间空一行
-4. 所有信息完全来自素材，严禁编造任何内容
+4. 所有信息完全来自素材，严禁编造内容，原文链接必须对应每条新闻的真实链接
 
 新闻素材：
 {raw_news}
