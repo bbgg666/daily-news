@@ -29,12 +29,16 @@ def get_global_news():
 def summarize_news(raw_news):
     prompt = f"""
 基于下面的真实新闻素材，精选10条过去24小时全球重要新闻，按重要性排序。
-严格格式规则：
-1. 开头只写「📰 全球早报」
-2. 每条新闻第一行是加粗的核心标题：**标题内容**
-3. 标题下空一行，再写一句话核心事实
-4. 每条完整新闻之间空两行
-5. 所有信息完全来自素材，严禁编造任何内容
+严格按照以下格式输出，不要任何额外说明：
+1. 开头固定三行：
+──────────
+<b>       📰 全球早报</b>
+──────────
+2. 每条新闻固定格式：
+<b>序号. 新闻核心标题</b>
+一句话核心事实内容
+3. 序号从1开始连续编号，每条新闻之间空一行
+4. 所有信息完全来自素材，严禁编造任何内容
 
 新闻素材：
 {raw_news}
@@ -50,8 +54,6 @@ def summarize_news(raw_news):
         "stream": False
     }
     resp = requests.post("https://api.deepseek.com/v1/chat/completions", headers=headers, json=data)
-    print(f"API状态码: {resp.status_code}")
-    print(f"API返回内容: {resp.text}")
     resp_json = resp.json()
     if "choices" not in resp_json:
         raise Exception(f"API调用失败: {resp_json}")
@@ -62,18 +64,15 @@ def push_telegram(content):
     payload = {
         "chat_id": TG_CHAT_ID,
         "text": content,
-        "parse_mode": "Markdown",
+        "parse_mode": "HTML",
         "disable_web_page_preview": True
     }
     resp = requests.post(api_url, json=payload)
-    print(f"TG推送状态码: {resp.status_code}")
-    print(f"TG返回内容: {resp.text}")
     resp.raise_for_status()
 
 if __name__ == "__main__":
     print("开始抓取新闻...")
     raw_news = get_global_news()
-    print(f"抓取到新闻素材长度: {len(raw_news)}")
     print("开始AI总结...")
     result = summarize_news(raw_news)
     print("总结完成，开始推送...")
